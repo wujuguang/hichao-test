@@ -8,14 +8,18 @@ u"""读取存放测试脚本的文件, 以命令行的形式执行指定的行�
 
 from __future__ import print_function
 
-import os
-import os.path
 import sys
+import logging
+import os.path
+from optparse import OptionParser
 
 if sys.version_info[0] == 3:
     range_ = range
 else:
     range_ = xrange
+
+log = logging.getLogger("hichao_test")
+log.setLevel(logging.DEBUG)
 
 
 class ScriptExecute(object):
@@ -63,16 +67,16 @@ class ScriptExecute(object):
         if os.path.exists(self.script_file):
 
             if os.path.ismount(self.script_file) or os.path.isdir(self.script_file):
-                print(u'亲, 指定的存储路径错误！')
+                log.error(u'亲, 指定的存储路径错误！')
                 return
 
             script_log_file = open(self.script_file, 'rb')
             lines = script_log_file.readlines()
         else:
-            print(u'测试脚本, 指定的文件不存在.')
+            log.error(u'测试脚本, 指定的文件不存在.')
 
         if not lines:
-            print(u'测试脚本, 指定的文件内容为空.')
+            log.error(u'测试脚本, 指定的文件内容为空.')
 
         return lines
 
@@ -88,13 +92,15 @@ class ScriptExecute(object):
 
         line = self.script_lines[num].strip().replace("\n", "")
 
-        # print(line)
-        # print(line.startswith('curl')
+        log.debug(line)
+        log.debug(line.startswith('curl'))
+
         if line.startswith('curl'):
             if self.lazy_bone:
                 line = self.lazy_bone.process_regular(line)
-            print(90 * '=')
-            print(line.split()[-1])
+
+            log.debug(90 * '=')
+            log.debug(line.split()[-1])
 
             if self.report_bool:
                 os.system('%s > %s' % (line, log_name))
@@ -155,7 +161,6 @@ class LazyBone(object):
 def main():
     """提供外部 entry points 而用.
     """
-    from optparse import OptionParser
 
     parser = OptionParser()
     parser.add_option("-f", "--file", type="string",
@@ -173,6 +178,9 @@ def main():
                       help="next lines count ")
 
     (options, args) = parser.parse_args()
+    if len(args) != 1:
+        parser.error("incorrect number of arguments")
+
     if not options.file_name:
         return
 

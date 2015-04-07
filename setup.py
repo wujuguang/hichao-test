@@ -31,6 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'hichao_curl = hichao_test.curl_reader:main',
+            'hichao_distinct = hichao_test.curl_builder:main'
         ]
     },
     classifiers=[
