@@ -1,0 +1,7 @@
+include README.rst
+include MANIFEST.in
+include CHANGELOG.rst
+include setup.py
+
+include hichao_test/__init__.py
+include hichao_test/curl_reader.py

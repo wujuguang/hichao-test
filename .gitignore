@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+
+*.py[cod]
+*.sw[op]
+
+dist/
+build/
+hichao_test.egg-info/
