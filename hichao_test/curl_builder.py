@@ -8,18 +8,14 @@ u"""拦截request, 构建curl脚本, 并存储类.
 """
 
 import os
-import logging
 import datetime
 from optparse import OptionParser
-from hichao_test.conf import login_api, logout_api, save_rows_queue
+from hichao_test.conf import log, login_api, logout_api, save_rows_queue
 
 try:
     from queue import Queue
 except ImportError:
     from Queue import Queue
-
-log = logging.getLogger("hichao_test")
-log.setLevel(logging.DEBUG)
 
 
 class DataStore(object):
@@ -88,7 +84,7 @@ class RequireStore(DataStore):
         super(RequireStore, self).__init__(report_file, maxsize)
         self.cookie = cookie
 
-    def hold_data_require(self, request, request_url=None, data=None):
+    def hold_data_require(self, request, request_url=None, data=None, frame='django'):
         """构建脚本, 生成curl 命令行.
 
             :param request
@@ -100,11 +96,24 @@ class RequireStore(DataStore):
             protocol: http/https 其它不考虑
         """
 
+        if frame == 'django':
+            is_secure = request.is_secure()
+            get_host = request.get_host()
+            get_full_path = request.get_full_path()
+        elif frame == 'tornado':
+            is_secure = request.protocol == 'https'
+            get_host = request.host
+            get_full_path = request.path
+        else:
+            is_secure = False
+            get_host = ''
+            get_full_path = ''
+
         line = 'curl '
         # 会话 cookies
         if self.cookie:
             # Fixed: -D and -b together error.
-            if request.get_full_path() in self._LOGIN_API + self._LOGOUT_API:
+            if get_full_path in self._LOGIN_API + self._LOGOUT_API:
                 line = ''.join((line, '-D %s ' % self.cookie))
             else:
                 line = ''.join((line, '-b %s ' % self.cookie))
@@ -119,8 +128,8 @@ class RequireStore(DataStore):
 
         # 构建请求地址
         if not request_url:
-            protocol = 'http://' if not request.is_secure() else 'https://'
-            request_url = '%s%s%s' % (protocol, request.get_host(), request.get_full_path())
+            protocol = 'http://' if not is_secure else 'https://'
+            request_url = '%s%s%s' % (protocol, get_host, get_full_path)
 
         line = ''.join((line, request_url))
         return line
@@ -138,7 +147,7 @@ def sole_file_data(instance):
         if os.path.exists(sole_file):
             os.remove(sole_file)  # 删除之前生成文件
 
-        print('Original: %s' % len(lines))
+        log.debug('Original: %s' % len(lines))
         sole_data = set(lines)
         num_date = 0
 
@@ -149,7 +158,7 @@ def sole_file_data(instance):
                     continue
                 rf.write(_line_)
 
-        print('Nowadays: %s' % (len(sole_data) - num_date))
+        log.debug('Nowadays: %s' % (len(sole_data) - num_date))
         print('All is Ok')
     else:
         print('Data is None')
@@ -163,7 +172,7 @@ def main():
     parser.add_option("-f", "--file", type="string",
                       dest="file_name",
                       default=None,
-                      help="Remove repeat lines in the script file.")
+                      help="remove repeat lines in the script file.")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:

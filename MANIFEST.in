@@ -4,4 +4,7 @@ include CHANGELOG.rst
 include setup.py
 
 include hichao_test/__init__.py
+include hichao_test/conf.py
 include hichao_test/curl_reader.py
+include hichao_test/curl_builder.py
+include hichao_test/decorator.py

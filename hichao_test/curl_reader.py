@@ -6,20 +6,17 @@ u"""读取存放测试脚本的文件, 以命令行的形式执行指定的行�
     利用 linux curl 构建测试脚本, 减少服务端开发过程中, 在测试上对客户端的依赖.
 """
 
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 
 import sys
-import logging
 import os.path
 from optparse import OptionParser
+from hichao_test.conf import log
 
 if sys.version_info[0] == 3:
     range_ = range
 else:
     range_ = xrange
-
-log = logging.getLogger("hichao_test")
-log.setLevel(logging.DEBUG)
 
 
 class ScriptExecute(object):
@@ -166,16 +163,16 @@ def main():
     parser.add_option("-f", "--file", type="string",
                       dest="file_name",
                       default=None,
-                      help="data from script file")
+                      help="store the curl script data file.")
     parser.add_option("-n", "--num", type="int",
                       dest="line_num",
                       default=-1,
-                      help="line number in script file")
+                      help="execute the script line number specified.")
 
     parser.add_option("-c", "--count", type="int",
                       dest="line_count",
                       default=0,
-                      help="next lines count ")
+                      help="perform the following line count.")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
