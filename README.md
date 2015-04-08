@@ -35,3 +35,6 @@ hichao-test is a Tool that HTTP Test base on linux curl.
     在shell终端:
     $ hichao_curl -h     # 执行脚本文件中的curl脚本命令.
     $ hichao_distinct -h # 对之前生成报告文件做去重处理.
+    
+    ＠django_request:    添入你的Django项目views函数前.
+    ＠tornado_request:   添入你的Tornado项目tornado.web.RequestHandler子类函数(如:POST)前.
