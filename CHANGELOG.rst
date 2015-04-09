@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.1 - 10-Apr-2015
+-------------------
+
+* Fix some bugs.
+* Add code comment.
+* Some objects for extended separation.
+
 0.2 - 06-Apr-2015
 -----------------
 

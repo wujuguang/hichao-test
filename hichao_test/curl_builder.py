@@ -87,13 +87,14 @@ class RequireStore(DataStore):
     def hold_data_require(self, request, request_url=None, data=None, frame='django'):
         """构建脚本, 生成curl 命令行.
 
-            :param request
-            :param request_url
-            :param data
+            :param request:     请求对象.
+            :param request_url: 请求地址.
+            :param data:        请求数据.
+            :param frame:       支持web框架.
 
             仅支持:
-            method: GET/POST 其它如有需要待扩展
-            protocol: http/https 其它不考虑
+            method: GET/POST 其它如有需要待扩展.
+            protocol: http/https 其它不考虑.
         """
 
         if frame == 'django':
@@ -138,7 +139,7 @@ class RequireStore(DataStore):
 def sole_file_data(instance):
     u"""对拦截curl记录保存文件, 做处理去掉重复行.
 
-        :param instance: DataStore实例
+        :param instance: DataStore实例.
     """
 
     lines = instance.open_file_data()

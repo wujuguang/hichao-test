@@ -25,9 +25,9 @@ class ScriptExecute(object):
 
     def __init__(self, script_file, report_bool=True, lazy_bone=None):
         """
-            :param script_file:
-            :param report_bool:
-            :param lazy_bone:
+            :param script_file: CURL脚本存储文件.
+            :param report_bool: 是否生成报告文件.
+            :param lazy_bone:   替换URL正则表达式中(GET)参数值.
         """
 
         super(ScriptExecute, self).__init__()
@@ -64,23 +64,23 @@ class ScriptExecute(object):
         if os.path.exists(self.script_file):
 
             if os.path.ismount(self.script_file) or os.path.isdir(self.script_file):
-                log.error(u'亲, 指定的存储路径错误！')
+                log.error("oh, specify the path error.")  # u'亲, 指定的存储路径错误！'
                 return
 
             script_log_file = open(self.script_file, 'rb')
             lines = script_log_file.readlines()
         else:
-            log.error(u'测试脚本, 指定的文件不存在.')
+            log.error("specified script file does not exist.")  # u'测试脚本, 指定的文件不存在.'
 
         if not lines:
-            log.error(u'测试脚本, 指定的文件内容为空.')
+            log.error("specified script file content is empty.")  # u'测试脚本, 指定的文件内容为空.'
 
         return lines
 
     def __loop_line(self, num):
         u"""运行行列表里指定的行.
 
-            :param num: 行号
+            :param num: 行号.
         """
 
         log_name = self.__path_result_file() % num
@@ -107,8 +107,8 @@ class ScriptExecute(object):
     def run_script_lines(self, start=0, count=0):
         u"""运行指定行范围脚本.
 
-            :param start: 起始行号 整数
-            :param count: 后面行数 正整数
+            :param start: 起始行号 整数.
+            :param count: 后面行数 正整数.
         """
 
         if self.script_lines:
@@ -127,17 +127,12 @@ class LazyBone(object):
     u"""处理某些正则表达式, 懒人而已.
     """
 
-    def __init__(self, regulars, exam_ids):
+    def __init__(self, _lazy_bone_list=None):
         """
-            :param regulars: 要替换的表达式
-            :param exam_ids: 被替换为的值
+            :param _lazy_bone_list: (要替换的表达式, 被替换为的值).
         """
 
-        # [r'(?P<user_id>\d+)', r'(?P<tip_id>\d+)', r'(?P<place_id>\d+)']  # 三者不会同时存在
-        # ['624', '26774', '1294']  # 待用于测试的实例依次ID
-
-        self.regulars = regulars
-        self.exam_ids = exam_ids
+        self._lazy_bone_list = _lazy_bone_list
 
     def process_regular(self, line):
         u"""处理某些正则表达式.
@@ -145,11 +140,11 @@ class LazyBone(object):
             :param line: 行内容
         """
 
-        for i in range_(len(self.regulars)):
-            if line.find(self.regulars[i]) < 0:
+        for (regular, exam_id) in self._lazy_bone_list:
+            if line.find(regular) < 0:
                 continue
 
-            line = line.replace(self.regulars[i], self.exam_ids[i])
+            line = line.replace(regular, exam_id)
             break
 
         return line
@@ -169,19 +164,21 @@ def main():
                       default=-1,
                       help="execute the script line number specified.")
 
-    parser.add_option("-c", "--count", type="int",
+    parser.add_option("-c", "--count", type="int", action="store",
                       dest="line_count",
                       default=0,
                       help="perform the following line count.")
 
     (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("incorrect number of arguments")
+
+    log.debug("options:%s" % options)
+    log.debug("args:" % args)
 
     if not options.file_name:
+        log.error("specified file required parameters are missing.")
         return
 
-    _curl_script = ScriptExecute(options.file_name)
+    _curl_script = ScriptExecute(options.file_name, report_bool=True, lazy_bone=None)
     _curl_script.run_script_lines(options.line_num, options.line_count)
 
 
