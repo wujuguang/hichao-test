@@ -60,9 +60,7 @@ class ScriptExecute(object):
         u"""读取测试脚本文件内容.
         """
 
-        lines = None
         if os.path.exists(self.script_file):
-
             if os.path.ismount(self.script_file) or os.path.isdir(self.script_file):
                 log.error("oh, specify the path error.")  # u'亲, 指定的存储路径错误！'
                 return
@@ -71,6 +69,7 @@ class ScriptExecute(object):
             lines = script_log_file.readlines()
         else:
             log.error("specified script file does not exist.")  # u'测试脚本, 指定的文件不存在.'
+            return
 
         if not lines:
             log.error("specified script file content is empty.")  # u'测试脚本, 指定的文件内容为空.'
