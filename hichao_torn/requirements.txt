@@ -1,2 +1,2 @@
 tornado
-hichao-test
+-e git+git@github.com:wujuguang/hichao-test.git#egg=hichao_test
