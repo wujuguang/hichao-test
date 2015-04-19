@@ -105,6 +105,10 @@ class RequireStore(DataStore):
             is_secure = request.protocol == 'https'
             get_host = request.host
             get_full_path = request.path
+        elif frame == 'pyramid':
+            is_secure = request.scheme == 'https'
+            get_host = request.host
+            get_full_path = request.path
         else:
             is_secure = False
             get_host = ''

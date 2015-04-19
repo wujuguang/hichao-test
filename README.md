@@ -21,6 +21,7 @@ hichao-test is a Tool that HTTP Test base on linux curl.
 
     decorator.py:
         django_request:    用于Django项目
+        pyramid_request:   用于Pyramid项目
         tornado_request:   用于Tornado项目
 
         - 测试时, 输出POST信息到控制台.
@@ -37,4 +38,5 @@ hichao-test is a Tool that HTTP Test base on linux curl.
     $ hichao_distinct -h # 对之前生成报告文件做去重处理.
     
     ＠django_request:    添入你的Django项目views函数前.
+    ＠pyramid_request:   添入你的pyramid项目views函数前.
     ＠tornado_request:   添入你的Tornado项目tornado.web.RequestHandler子类函数(如:POST)前.

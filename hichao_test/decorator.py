@@ -27,6 +27,11 @@ def request_process(request, frame='django'):
         post_dict = request.arguments
         get_host = request.host
         get_full_path = request.path
+    elif frame == 'pyramid':
+        is_secure = request.scheme == 'https'
+        post_dict = request.POST
+        get_host = request.host
+        get_full_path = request.path
     else:
         is_secure = False
         post_dict = {}
@@ -55,7 +60,7 @@ def request_process(request, frame='django'):
         cur_instance.save_line_data(line)
 
 
-def django_request(func=None):
+def frame_request(frame, func=None):
     u"""测试request函数, 并输出信息.
 
         :param func: view 函数
@@ -65,7 +70,7 @@ def django_request(func=None):
     def returned_wrapper(request, *args, **kwargs):
         try:
             # 查看并控制台核实传入数据
-            request_process(request, 'django')
+            request_process(request, frame)
             response = func(request, *args, **kwargs)
             return response
 
@@ -79,14 +84,39 @@ def django_request(func=None):
     return returned_wrapper
 
 
+def django_request(func=None):
+    u"""测试request函数, 并输出信息.
+
+        :param func: view 函数
+    """
+
+    return frame_request('django', func)
+
+
 def tornado_request(func=None):
     """测试request函数, 打印出异常信息.
     """
 
     @wraps(func)
     def returned_wrapper(self, *args, **kwargs):
-        request_process(self.request, 'tornado')
-        response = func(self, *args, **kwargs)
-        return response
+        try:
+            # 查看并控制台核实传入数据
+            request_process(self.request, 'tornado')
+            response = func(self, *args, **kwargs)
+            return response
+
+        except Exception as e:
+            # 异常时保存下数据
+            cur_instance.save_file_data()
+
+            log.exception(e)
+            traceback.print_exc(file=sys.stdout)
 
     return returned_wrapper
+
+
+def pyramid_request(func=None):
+    """测试request函数, 打印出异常信息.
+    """
+
+    return frame_request('pyramid', func)

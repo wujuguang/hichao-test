@@ -26,6 +26,10 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
 
         @django_request:
         用于Django项目
+
+        @pyramid_request:
+        用于Pyramid项目
+
         @tornado_request:
         用于Tornado项目
 
