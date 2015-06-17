@@ -148,7 +148,7 @@ def sole_file_data(instance):
 
     lines = instance.open_file_data()
     if lines:
-        sole_file = '%s_distinct.%s' % os.path.splitext(instance.get_report_file())  # 去重后的记录文件
+        sole_file = '%s_distinct%s' % os.path.splitext(instance.get_report_file())  # 去重后的记录文件
         if os.path.exists(sole_file):
             os.remove(sole_file)  # 删除之前生成文件
 
