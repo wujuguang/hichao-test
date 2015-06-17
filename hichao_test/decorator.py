@@ -40,18 +40,18 @@ def request_process(request, frame='django'):
 
     str_post = ''
     protocol = 'http://' if not is_secure else 'https://'
-    request_url = '%s%s%s\n' % (protocol, get_host, get_full_path)
+    request_url = '%s%s%s' % (protocol, get_host, get_full_path)
 
     # 输出传入值开始
     log.debug('URL: %s' % request_url)
-    log.debug(post_dict)
 
     if len(post_dict) > 0:
-        log.debug('The following POST data: ')
+        log.debug(post_dict)
         for (key, value) in post_dict.items():
             str_post = '&'.join((str_post, '%s=%s' % (key, value)))
         str_post = str_post.strip('&')
-        log.debug('\nPOST_DATA_STRING: %s' % str_post)
+        log.debug('Data String: %s' % str_post)
+        log.debug('-*-' * 40)
 
     if post_data_saved and str_post:
         # 记录传入值

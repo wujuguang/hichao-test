@@ -3,6 +3,13 @@ include MANIFEST.in
 include CHANGELOG.rst
 include setup.py
 
+include hichao_test.egg-info/PKG-INFO
+include hichao_test.egg-info/SOURCES.txt
+include hichao_test.egg-info/dependency_links.txt
+include hichao_test.egg-info/requires.txt
+include hichao_test.egg-info/top_level.txt
+include hichao_test.egg-info/zip-safe
+
 include hichao_test/__init__.py
 include hichao_test/conf.py
 include hichao_test/curl_reader.py

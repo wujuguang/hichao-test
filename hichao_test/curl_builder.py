@@ -70,7 +70,7 @@ class DataStore(object):
 
             while not self._lines_store.empty():
                 one = self._lines_store.get()
-                f.write('\t%s' % one)
+                f.write('\t%s\n' % one)
 
 
 class RequireStore(DataStore):
