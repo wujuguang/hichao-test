@@ -29,7 +29,7 @@ class DataStore(object):
 
         # 创建存放的路径
         dir_path = os.path.dirname(self._report_file)
-        if not os.path.exists(dir_path):
+        if dir_path and not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
     def get_report_file(self):
@@ -157,6 +157,9 @@ def sole_file_data(instance):
         num_date = 0
 
         with open(sole_file, 'ab') as rf:
+            log_time = '#### %s\n' % str(datetime.datetime.now())
+            rf.write(log_time)
+
             for _line_ in sole_data:
                 if _line_.startswith('####'):  # 取消原来日期分组
                     num_date += 1
@@ -175,18 +178,16 @@ def main():
 
     parser = OptionParser()
     parser.add_option("-f", "--file", type="string",
-                      dest="file_name",
+                      dest="file",
                       default=None,
                       help="remove repeat lines in the script file.")
 
     (options, args) = parser.parse_args()
-    if len(args) != 1:
+    if not options.file:
         parser.error("incorrect number of arguments")
-
-    if not options.file_name:
         return
 
-    _instance = RequireStore(report_file=options.file_name, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
+    _instance = RequireStore(report_file=options.file, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
     sole_file_data(_instance)
 
 

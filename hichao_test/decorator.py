@@ -9,7 +9,7 @@ from functools import wraps
 from hichao_test.conf import log, post_data_saved, save_rows_queue, curl_report
 from hichao_test.curl_builder import RequireStore
 
-cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue, cookie='./log/cookie.txt')
+cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
 
 
 def request_process(request, frame='django'):
