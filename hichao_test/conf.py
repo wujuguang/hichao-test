@@ -6,7 +6,7 @@ import os.path
 
 logging.basicConfig()
 
-log = logging.getLogger("ky_hichao")
+log = logging.getLogger("hichao")
 log.setLevel(logging.DEBUG)
 
 login_api = ('/user/login/', '/user/join/',)

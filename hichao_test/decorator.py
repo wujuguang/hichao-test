@@ -51,7 +51,7 @@ def request_process(request, frame='django'):
             str_post = '&'.join((str_post, '%s=%s' % (key, value)))
         str_post = str_post.strip('&')
         log.debug('Data String: %s' % str_post)
-        log.debug('-*-' * 40)
+        log.debug('-*' * 50)
 
     if post_data_saved and str_post:
         # 记录传入值

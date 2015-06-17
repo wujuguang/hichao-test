@@ -79,23 +79,23 @@ class ScriptExecute(object):
     def __loop_line(self, num):
         u"""运行行列表里指定的行.
 
-            :param num: 行号.
+            :param num: 行编号, 正整数.
         """
 
         log_name = self.__path_result_file() % num
         if num > 0:
             num -= 1  # 文档行标, 实例索引起点不一
+        else:
+            raise Exception("num参数必须是正整数.")
 
         line = self.script_lines[num].strip().replace("\n", "")
-
-        log.debug(line)
-        log.debug(line.startswith('curl'))
+        # log.debug(line.startswith('curl'))
 
         if line.startswith('curl'):
             if self.lazy_bone:
                 line = self.lazy_bone.process_regular(line)
 
-            log.debug(90 * '=')
+            log.debug(line)
             log.debug(line.split()[-1])
 
             if self.report_bool:
@@ -103,11 +103,13 @@ class ScriptExecute(object):
             else:
                 os.system('%s' % line)
 
-    def run_script_lines(self, start=0, count=0):
+            log.debug('-*' * 50)
+
+    def run_script_lines(self, start=1, count=0):
         u"""运行指定行范围脚本.
 
-            :param start: 起始行号 整数.
-            :param count: 后面行数 正整数.
+            :param start: 起始行编号, 正整数.
+            :param count: 后面行数, 正负整数.
         """
 
         if self.script_lines:
@@ -115,11 +117,18 @@ class ScriptExecute(object):
                 if count == 0:
                     self.__loop_line(start)
                 else:
-                    for i in range_(start, start + count):
-                        if i == len(self.script_lines):
-                            break
-
+                    data_range = range_(start, start + count) if count > 0 else range_(start, start + count, -1)
+                    for i in data_range:
                         self.__loop_line(i)
+
+    def run_script_total(self):
+        """运行所有记录.
+        """
+
+        if self.script_lines:
+            data_range = range_(1, len(self.script_lines) + 1)
+            for i in data_range:
+                self.__loop_line(i)
 
 
 class LazyBone(object):
@@ -154,31 +163,39 @@ def main():
     """
 
     parser = OptionParser()
-    parser.add_option("-f", "--file", type="string",
-                      dest="file_name",
-                      default=None,
+    parser.add_option("-f", "--file",
+                      type="string",
+                      dest="file",
                       help="store the curl script data file.")
-    parser.add_option("-n", "--num", type="int",
-                      dest="line_num",
-                      default=-1,
+
+    parser.add_option("-n", "--num",
+                      type="int",
+                      dest="num",
+                      default=None,
                       help="execute the script line number specified.")
 
-    parser.add_option("-c", "--count", type="int", action="store",
-                      dest="line_count",
+    parser.add_option("-c", "--count",
+                      type="int",
+                      dest="count",
                       default=0,
                       help="perform the following line count.")
 
     (options, args) = parser.parse_args()
+    log.debug("options:%s\n" % options)
 
-    log.debug("options:%s" % options)
-    log.debug("args:" % args)
-
-    if not options.file_name:
+    if not options.file:
         log.error("specified file required parameters are missing.")
         return
 
-    _curl_script = ScriptExecute(options.file_name, report_bool=True, lazy_bone=None)
-    _curl_script.run_script_lines(options.line_num, options.line_count)
+    file_name = options.file
+    _curl_script = ScriptExecute(file_name, report_bool=True, lazy_bone=None)
+
+    if options.num is None:
+        _curl_script.run_script_total()
+    else:
+        line_num = options.num
+        line_count = options.count
+        _curl_script.run_script_lines(line_num, line_count)
 
 
 if __name__ == '__main__':

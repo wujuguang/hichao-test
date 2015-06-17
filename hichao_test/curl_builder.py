@@ -186,7 +186,7 @@ def main():
     if not options.file_name:
         return
 
-    _instance = RequireStore(report_file=options.file_name, maxsize=save_rows_queue, cookie='./log/cookie.txt')
+    _instance = RequireStore(report_file=options.file_name, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
     sole_file_data(_instance)
 
 
