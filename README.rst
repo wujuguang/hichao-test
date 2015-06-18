@@ -1,21 +1,23 @@
 hichao-test
+-----------
+
+hichao-test is a Tool that HTTP Test base on linux curl.
 
 简介:
------
+=====
 
-pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开，可视化界面的操作，但不利于参数输入后保存以及后续的复用。
+pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开，可视化界面的操作，但不利于参数输入后保存以及后续的复用。此工具基于以上缺点，直接借助linux工具，结合实际的个人需求与想法，以拦截请求、保存请求、复用的流程进行，为方便个人所用定制。
 
-此工具基于以上缺点，直接借助linux工具，结合实际的个人需求与想法，以拦截请求、保存请求、复用的流程进行，为方便个人所用定制。
+使用:
+=====
 
-依赖:
------
+    依赖:
+    
+    linux系统需要安装curl
     ::
 
         $ sudo yum install curl
         $ sudo apt-get install curl
-
-使用:
------
 
     模块介绍：
     ::
@@ -42,5 +44,8 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
 
 
     在shell终端:
+    ::
+    
     $ hichao_curl -h
     $ hichao_distinct -h
+
