@@ -16,25 +16,25 @@ def request_process(request, frame='django'):
     u"""输出并记录 request post(dict) 传入值.
         捕获和验证参数以供 curl 再使用, 验证从 curl 传来值.
     """
-
+    req_method = request.method
     if frame == 'django':
         is_secure = request.is_secure()
-        post_dict = request.POST
+        req_dict = request.POST if req_method == "POST" else request.GET
         get_host = request.get_host()
         get_full_path = request.get_full_path()
     elif frame == 'tornado':
         is_secure = request.protocol == 'https'
-        post_dict = request.arguments
+        req_dict = request.arguments
         get_host = request.host
         get_full_path = request.path
     elif frame == 'pyramid':
         is_secure = request.scheme == 'https'
-        post_dict = request.POST
+        req_dict = request.POST if req_method == "POST" else request.GET
         get_host = request.host
         get_full_path = request.path
     else:
         is_secure = False
-        post_dict = {}
+        req_dict = {}
         get_host = ''
         get_full_path = ''
 
@@ -45,15 +45,15 @@ def request_process(request, frame='django'):
     # 输出传入值开始
     log.debug('URL: %s' % request_url)
 
-    if len(post_dict) > 0:
-        log.debug(post_dict)
-        for (key, value) in post_dict.items():
+    if len(req_dict) > 0:
+        log.debug(req_dict)
+        for (key, value) in req_dict.items():
             str_post = '&'.join((str_post, '%s=%s' % (key, value)))
         str_post = str_post.strip('&')
         log.debug('Data String: %s' % str_post)
         log.debug('-*' * 50)
 
-    if post_data_saved and str_post:
+    if req_method == "POST" and post_data_saved and str_post:
         # 记录传入值
         line = cur_instance.hold_data_require(
             request, request_url=request_url, data=str_post, frame=frame)
