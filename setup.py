@@ -4,7 +4,6 @@
 import os
 from setuptools import setup, find_packages
 
-
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 NEWS = open(os.path.join(here, 'CHANGELOG.rst')).read()
@@ -27,7 +26,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     platforms=["any"],
-    zip_safe=zip_safe,
+    # zip_safe=zip_safe,
+    zip_safe=False,
     entry_points={
         'console_scripts': [
             'hichao_curl = hichao_test.curl_reader:main',
@@ -50,3 +50,4 @@ setup(
         'License :: OSI Approved :: MIT License'
     ]
 )
+
