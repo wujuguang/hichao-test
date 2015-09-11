@@ -134,7 +134,18 @@ def tornado_request(func=None):
         try:
             # 查看并控制台核实传入数据
             request_process(self.request, 'tornado')
-            response = func(self, *args, **kwargs)
+
+            # 计算后端程序执行时间
+            if exec_time_print:
+                with Timer() as t:
+                    response = func(self, *args, **kwargs)
+
+                now_time = time.time()
+                log.debug("%s => %s ms" % (func.__name__, t.seconds))
+                line = "%-25s at %.2f %s => %s ms\n" % (func.__name__, now_time, 8 * ' ', t.seconds)
+                time_instance.save_line_data(line)
+            else:
+                response = func(self, *args, **kwargs)
             return response
 
         except Exception as e:
