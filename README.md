@@ -45,3 +45,11 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
     ＠django_request:    添入你的Django项目views函数前.
     ＠pyramid_request:   添入你的pyramid项目views函数前.
     ＠tornado_request:   添入你的Tornado项目tornado.web.RequestHandler子类函数(如:POST)前.
+    
+安装:
+-----
+    pip install git+git@github.com:wujuguang/hichao-test.git
+
+    or
+
+    pip install git+https://github.com/wujuguang/hichao-test.git
