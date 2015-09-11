@@ -12,11 +12,17 @@ log.setLevel(logging.DEBUG)
 login_api = ('/user/login/', '/user/join/',)
 logout_api = ('/user/logout/',)
 
+# 是否输出执行时间
+exec_time_print = True
+
 # 是否保存请求痕迹
 post_data_saved = True
 
 # 队列满多少条保存
-save_rows_queue = 15
+save_rows_queue = 1  # 15
+
+# 接口执行时间保存文件
+time_report = os.path.join(os.path.expanduser('~'), 'report', r'report_time.md')
 
 # 拦截生成curl保存文件
 # noinspection PyUnresolvedReferences

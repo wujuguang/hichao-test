@@ -4,12 +4,33 @@
 from __future__ import unicode_literals, print_function
 
 import sys
+import time
 import traceback
 from functools import wraps
-from hichao_test.conf import log, post_data_saved, save_rows_queue, curl_report
-from hichao_test.curl_builder import RequireStore
 
+from hichao_test.conf import log, exec_time_print, post_data_saved, save_rows_queue, time_report, curl_report
+from hichao_test.curl_builder import DataStore, RequireStore
+
+time_instance = DataStore(report_file=time_report, maxsize=save_rows_queue)
 cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
+
+
+class Timer(object):
+    u"""Computer program exec time."""
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        self.seconds = self.secs * 1000
+        if self.verbose:
+            print('elapsed time: %f ms' % self.seconds)
 
 
 def request_process(request, frame='django'):
@@ -71,7 +92,18 @@ def frame_request(frame, func=None):
         try:
             # 查看并控制台核实传入数据
             request_process(request, frame)
-            response = func(request, *args, **kwargs)
+
+            # 计算后端程序执行时间
+            if exec_time_print:
+                with Timer() as t:
+                    response = func(request, *args, **kwargs)
+
+                now_time = time.time()
+                log.debug("%s => %s ms" % (func.__name__, t.seconds))
+                line = "%-25s at %.2f %s => %s ms\n" % (func.__name__, now_time, 8 * ' ', t.seconds)
+                time_instance.save_line_data(line)
+            else:
+                response = func(request, *args, **kwargs)
             return response
 
         except Exception as e:
