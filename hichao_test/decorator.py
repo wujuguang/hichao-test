@@ -80,6 +80,8 @@ def request_process(request, frame='django'):
             request, request_url=request_url, data=str_post, frame=frame)
         cur_instance.save_line_data(line)
 
+    return get_full_path
+
 
 def frame_request(frame, func=None):
     u"""测试request函数, 并输出信息.
@@ -91,16 +93,15 @@ def frame_request(frame, func=None):
     def returned_wrapper(request, *args, **kwargs):
         try:
             # 查看并控制台核实传入数据
-            request_process(request, frame)
+            full_path = request_process(request, frame)
 
             # 计算后端程序执行时间
             if exec_time_print:
                 with Timer() as t:
                     response = func(request, *args, **kwargs)
 
-                now_time = time.time()
-                log.debug("%s => %s ms" % (func.__name__, t.seconds))
-                line = "%-25s at %.2f %s => %s ms\n" % (func.__name__, now_time, 8 * ' ', t.seconds)
+                log.debug("%s => %s ms" % (full_path, t.seconds))
+                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.seconds)
                 time_instance.save_line_data(line)
             else:
                 response = func(request, *args, **kwargs)
@@ -133,7 +134,7 @@ def tornado_request(func=None):
     def returned_wrapper(self, *args, **kwargs):
         try:
             # 查看并控制台核实传入数据
-            request_process(self.request, 'tornado')
+            full_path = request_process(self.request, 'tornado')
 
             # 计算后端程序执行时间
             if exec_time_print:
@@ -141,8 +142,8 @@ def tornado_request(func=None):
                     response = func(self, *args, **kwargs)
 
                 now_time = time.time()
-                log.debug("%s => %s ms" % (func.__name__, t.seconds))
-                line = "%-25s at %.2f %s => %s ms\n" % (func.__name__, now_time, 8 * ' ', t.seconds)
+                log.debug("%s => %s ms" % (full_path, t.seconds))
+                line = "%-25s at %.2f %s => %s ms\n" % (full_path, now_time, 8 * ' ', t.seconds)
                 time_instance.save_line_data(line)
             else:
                 response = func(self, *args, **kwargs)
