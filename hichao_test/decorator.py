@@ -27,10 +27,10 @@ class Timer(object):
 
     def __exit__(self, *args, **kwargs):
         self.end = time.time()
-        self.secs = self.end - self.start
-        self.seconds = self.secs * 1000
+        self.seconds = self.end - self.start
+        self.millisecond = self.seconds * 1000
         if self.verbose:
-            print('elapsed time: %f ms' % self.seconds)
+            print('elapsed time: %f ms' % self.millisecond)
 
 
 def request_process(request, frame='django'):
@@ -100,8 +100,8 @@ def frame_request(frame, func=None):
                 with Timer() as t:
                     response = func(request, *args, **kwargs)
 
-                log.debug("%s => %s ms" % (full_path, t.seconds))
-                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.seconds)
+                log.debug("%s => %s ms" % (full_path, t.millisecond))
+                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.millisecond)
                 time_instance.save_line_data(line)
             else:
                 response = func(request, *args, **kwargs)
@@ -141,8 +141,8 @@ def tornado_request(func=None):
                 with Timer() as t:
                     response = func(self, *args, **kwargs)
 
-                log.debug("%s => %s ms" % (full_path, t.seconds))
-                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.seconds)
+                log.debug("%s => %s ms" % (full_path, t.millisecond))
+                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.millisecond)
                 time_instance.save_line_data(line)
             else:
                 response = func(self, *args, **kwargs)
