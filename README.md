@@ -29,8 +29,10 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
         pyramid_request:   用于Pyramid项目
         tornado_request:   用于Tornado项目
 
+        - 测试时, 输出执行时间到控制台.
         - 测试时, 输出POST信息到控制台.
-        - 拦截测试时请求数据, 保存并构建curl脚本保存到文件.
+        - 计算测试时程序执行时间, 并保存数据到文件.
+        - 拦截测试时请求数据, 并构建curl脚本保存到文件.        
 
     curl_builder.py:
         - 构建生成curl测试请求数据, 以便于后续回归测试, 供curl_reader.py自动化.
@@ -48,8 +50,8 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
     
 安装:
 -----
-    pip install git+git@github.com:wujuguang/hichao-test.git
+    pip install -e git+git@github.com:wujuguang/hichao-test.git
 
     or
 
-    pip install git+https://github.com/wujuguang/hichao-test.git
+    pip install -e git+https://github.com/wujuguang/hichao-test.git

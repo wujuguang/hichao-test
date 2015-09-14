@@ -141,9 +141,8 @@ def tornado_request(func=None):
                 with Timer() as t:
                     response = func(self, *args, **kwargs)
 
-                now_time = time.time()
                 log.debug("%s => %s ms" % (full_path, t.seconds))
-                line = "%-25s at %.2f %s => %s ms\n" % (full_path, now_time, 8 * ' ', t.seconds)
+                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.seconds)
                 time_instance.save_line_data(line)
             else:
                 response = func(self, *args, **kwargs)
