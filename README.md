@@ -48,6 +48,13 @@ pycharm自带个工具，在菜单Tools --> Test RESTful Web Service可以打开
     ＠pyramid_request:   添入你的pyramid项目views函数前.
     ＠tornado_request:   添入你的Tornado项目tornado.web.RequestHandler子类函数(如:POST)前.
     
+事项:
+------
+    在使用*_request时, 有可能因为某些原因, 其下的request.host不为实际的域名.
+    比如: 使用nginx的负载均衡, headers下的Host会被改变为upstream的名称. 在其节点下添加如下即可:
+
+    proxy_set_header Host $http_host;
+    
 安装:
 -----
     pip install -e git+git@github.com:wujuguang/hichao-test.git
