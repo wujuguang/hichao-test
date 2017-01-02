@@ -8,15 +8,17 @@ import time
 import traceback
 from functools import wraps
 
-from hichao_test.conf import log, exec_time_print, post_data_saved, save_rows_queue, time_report, curl_report
+from hichao_test.conf import (log, exec_time_print, post_data_saved,
+                              save_rows_queue, time_report, curl_report)
 from hichao_test.curl_builder import DataStore, RequireStore
 
 time_instance = DataStore(report_file=time_report, maxsize=save_rows_queue)
-cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
+cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue,
+                            cookie='~/report/cookie.txt')
 
 
 class Timer(object):
-    u"""Computer program exec time."""
+    """Computer program exec time."""
 
     def __init__(self, verbose=False):
         self.verbose = verbose
@@ -34,7 +36,7 @@ class Timer(object):
 
 
 def request_process(request, frame='django'):
-    u"""输出并记录 request post(dict) 传入值.
+    """输出并记录 request post(dict) 传入值.
         捕获和验证参数以供 curl 再使用, 验证从 curl 传来值.
     """
     req_method = request.method
@@ -84,8 +86,9 @@ def request_process(request, frame='django'):
 
 
 def frame_request(frame, func=None):
-    u"""测试request函数, 并输出信息.
+    """测试request函数, 并输出信息.
 
+        :param frame: 框架 名称
         :param func: view 函数
     """
 
@@ -101,7 +104,8 @@ def frame_request(frame, func=None):
                     response = func(request, *args, **kwargs)
 
                 log.debug("%s => %s ms" % (full_path, t.millisecond))
-                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.millisecond)
+                line = "%-25s %s => %s ms\n" % (
+                    full_path, 8 * ' ', t.millisecond)
                 time_instance.save_line_data(line)
             else:
                 response = func(request, *args, **kwargs)
@@ -118,7 +122,7 @@ def frame_request(frame, func=None):
 
 
 def django_request(func=None):
-    u"""测试request函数, 并输出信息.
+    """测试request函数, 并输出信息.
 
         :param func: view 函数
     """
@@ -142,7 +146,8 @@ def tornado_request(func=None):
                     response = func(self, *args, **kwargs)
 
                 log.debug("%s => %s ms" % (full_path, t.millisecond))
-                line = "%-25s %s => %s ms\n" % (full_path, 8 * ' ', t.millisecond)
+                line = "%-25s %s => %s ms\n" % (
+                    full_path, 8 * ' ', t.millisecond)
                 time_instance.save_line_data(line)
             else:
                 response = func(self, *args, **kwargs)

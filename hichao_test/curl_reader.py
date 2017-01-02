@@ -1,26 +1,23 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-u"""读取存放测试脚本的文件, 以命令行的形式执行指定的行脚本, 指定范围的行脚本.
+"""读取存放测试脚本的文件, 以命令行的形式执行指定的行脚本, 指定范围的行脚本.
 
     利用 linux curl 构建测试脚本, 减少服务端开发过程中, 在测试上对客户端的依赖.
 """
 
 from __future__ import unicode_literals, print_function
 
-import sys
+import six
 import os.path
 from optparse import OptionParser
 from hichao_test.conf import log
 
-if sys.version_info[0] == 3:
-    range_ = range
-else:
-    range_ = xrange
+range_ = six.moves.range
 
 
 class ScriptExecute(object):
-    u"""读取测试脚本, 执行行脚本, 指定范围的行脚本
+    """读取测试脚本, 执行行脚本, 指定范围的行脚本
     """
 
     def __init__(self, script_file, report_bool=True, lazy_bone=None):
@@ -39,11 +36,12 @@ class ScriptExecute(object):
         self.log_file_name = None
 
     def __path_result_file(self):
-        u"""生成日志的目录及文件形式.
+        """生成日志的目录及文件形式.
         """
 
         # noinspection PyUnresolvedReferences
-        result_logs = os.path.join(os.path.dirname(self.script_file), r'log')  # 默认报告目录
+        result_logs = os.path.join(os.path.dirname(self.script_file),
+                                   r'log')  # 默认报告目录
 
         if not os.path.exists(result_logs):
             os.makedirs(result_logs)
@@ -57,27 +55,30 @@ class ScriptExecute(object):
         return self.log_file_name
 
     def __read_script_file(self):
-        u"""读取测试脚本文件内容.
+        """读取测试脚本文件内容.
         """
 
         if os.path.exists(self.script_file):
-            if os.path.ismount(self.script_file) or os.path.isdir(self.script_file):
-                log.error("oh, specify the path error.")  # u'亲, 指定的存储路径错误！'
+            if os.path.ismount(self.script_file) or os.path.isdir(
+                    self.script_file):
+                log.error("oh, specify the path error.")  # '亲, 指定的存储路径错误！'
                 return
 
             script_log_file = open(self.script_file, 'rb')
             lines = script_log_file.readlines()
         else:
-            log.error("specified script file does not exist.")  # u'测试脚本, 指定的文件不存在.'
+            # '测试脚本, 指定的文件不存在.'
+            log.error("specified script file does not exist.")
             return
 
         if not lines:
-            log.error("specified script file content is empty.")  # u'测试脚本, 指定的文件内容为空.'
+            # '测试脚本, 指定的文件内容为空.'
+            log.error("specified script file content is empty.")
 
         return lines
 
     def __loop_line(self, num):
-        u"""运行行列表里指定的行.
+        """运行行列表里指定的行.
 
             :param num: 行编号, 正整数.
         """
@@ -106,7 +107,7 @@ class ScriptExecute(object):
             log.debug('-*' * 50)
 
     def run_script_lines(self, start=1, count=0):
-        u"""运行指定行范围脚本.
+        """运行指定行范围脚本.
 
             :param start: 起始行编号, 正整数.
             :param count: 后面行数, 正负整数.
@@ -117,7 +118,8 @@ class ScriptExecute(object):
                 if count == 0:
                     self.__loop_line(start)
                 else:
-                    data_range = range_(start, start + count) if count > 0 else range_(start, start + count, -1)
+                    step = 1 if count > 0 else -1
+                    data_range = range_(start, start + count, step)
                     for i in data_range:
                         self.__loop_line(i)
 
@@ -132,7 +134,7 @@ class ScriptExecute(object):
 
 
 class LazyBone(object):
-    u"""处理某些正则表达式, 懒人而已.
+    """处理某些正则表达式, 懒人而已.
     """
 
     def __init__(self, _lazy_bone_list=None):
@@ -143,7 +145,7 @@ class LazyBone(object):
         self._lazy_bone_list = _lazy_bone_list
 
     def process_regular(self, line):
-        u"""处理某些正则表达式.
+        """处理某些正则表达式.
 
             :param line: 行内容
         """

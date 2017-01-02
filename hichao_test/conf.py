@@ -22,11 +22,13 @@ post_data_saved = True
 save_rows_queue = 1  # 15
 
 # 接口执行时间保存文件
-time_report = os.path.join(os.path.expanduser('~'), 'report', r'report_time.md')
+time_report = os.path.join(os.path.expanduser('~'), 'report',
+                           r'report_time.md')
 
 # 拦截生成curl保存文件
 # noinspection PyUnresolvedReferences
-curl_report = os.path.join(os.path.expanduser('~'), 'report', r'report_curl.md')
+curl_report = os.path.join(os.path.expanduser('~'), 'report',
+                           r'report_curl.md')
 
 # 处理某些正则表达式, LazyBone实例化使用
 lazy_bone_list = (

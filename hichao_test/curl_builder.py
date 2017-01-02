@@ -3,23 +3,21 @@
 
 from __future__ import unicode_literals, print_function
 
-u"""拦截request, 构建curl脚本, 并存储类.
+"""拦截request, 构建curl脚本, 并存储类.
     没使用middleware的形式, 拦截所需service, 使定义更灵活.
 """
 
 import os
 import datetime
+import six
 from optparse import OptionParser
 from hichao_test.conf import log, login_api, logout_api, save_rows_queue
 
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
+Queue = six.moves.queue.Queue
 
 
 class DataStore(object):
-    u"""数据行存储类.
+    """数据行存储类.
     """
 
     def __init__(self, report_file, maxsize=5):
@@ -36,7 +34,7 @@ class DataStore(object):
         return self._report_file
 
     def open_file_data(self):
-        u"""读取报告文件
+        """读取报告文件
         """
 
         if os.path.exists(self._report_file):
@@ -46,7 +44,7 @@ class DataStore(object):
         return None
 
     def save_line_data(self, line):
-        u"""保存行数据.
+        """保存行数据.
 
             :param line
         """
@@ -60,21 +58,21 @@ class DataStore(object):
             self.save_file_data()
 
     def save_file_data(self):
-        u"""存储数据到文件.
+        """存储数据到文件.
         """
 
         with open(self._report_file, 'ab') as f:
             if not self._lines_store.empty():
-                log_time = '#### %s\n' % str(datetime.datetime.now())
-                f.write(log_time)
+                log_time = "#### %s\n" % str(datetime.datetime.now())
+                f.write(str(log_time))
 
             while not self._lines_store.empty():
                 one = self._lines_store.get()
-                f.write('\t%s\n' % one)
+                f.write(str("\t%s\n" % one))
 
 
 class RequireStore(DataStore):
-    u"""拦截request, 构建curl脚本, 并存储类.
+    """拦截request, 构建curl脚本, 并存储类.
     """
 
     _LOGIN_API = login_api
@@ -84,7 +82,8 @@ class RequireStore(DataStore):
         super(RequireStore, self).__init__(report_file, maxsize)
         self.cookie = cookie
 
-    def hold_data_require(self, request, request_url=None, data=None, frame='django'):
+    def hold_data_require(self, request, request_url=None, data=None,
+                          frame='django'):
         """构建脚本, 生成curl 命令行.
 
             :param request:     请求对象.
@@ -141,14 +140,15 @@ class RequireStore(DataStore):
 
 
 def sole_file_data(instance):
-    u"""对拦截curl记录保存文件, 做处理去掉重复行.
+    """对拦截curl记录保存文件, 做处理去掉重复行.
 
         :param instance: DataStore实例.
     """
 
     lines = instance.open_file_data()
     if lines:
-        sole_file = '%s_distinct%s' % os.path.splitext(instance.get_report_file())  # 去重后的记录文件
+        sole_file = '%s_distinct%s' % os.path.splitext(
+            instance.get_report_file())  # 去重后的记录文件
         if os.path.exists(sole_file):
             os.remove(sole_file)  # 删除之前生成文件
 
@@ -157,8 +157,8 @@ def sole_file_data(instance):
         num_date = 0
 
         with open(sole_file, 'ab') as rf:
-            log_time = '#### %s\n' % str(datetime.datetime.now())
-            rf.write(log_time)
+            log_time = "#### %s\n" % str(datetime.datetime.now())
+            rf.write(str(log_time))
 
             for _line_ in sole_data:
                 if _line_.startswith('####'):  # 取消原来日期分组
@@ -187,7 +187,8 @@ def main():
         parser.error("incorrect number of arguments")
         return
 
-    _instance = RequireStore(report_file=options.file, maxsize=save_rows_queue, cookie='~/report/cookie.txt')
+    _instance = RequireStore(report_file=options.file, maxsize=save_rows_queue,
+                             cookie='~/report/cookie.txt')
     sole_file_data(_instance)
 
 
