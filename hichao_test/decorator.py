@@ -1,23 +1,43 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
+#!/usr/bin/env python
 
 import sys
 import time
 import traceback
 from functools import wraps
+from urllib.parse import quote_plus
 
 from hichao_test.conf import (log, exec_time_print, post_data_saved,
                               save_rows_queue, time_report, curl_report)
 from hichao_test.curl_builder import DataStore, RequireStore
 
-time_instance = DataStore(report_file=time_report, maxsize=save_rows_queue)
-cur_instance = RequireStore(report_file=curl_report, maxsize=save_rows_queue,
-                            cookie='~/report/cookie.txt')
+_time_instance = None
+_cur_instance = None
 
 
-class Timer(object):
+def get_time_instance():
+    """延迟创建, 避免 import 时创建目录等副作用.
+    """
+
+    global _time_instance
+    if _time_instance is None:
+        _time_instance = DataStore(report_file=time_report,
+                                   maxsize=save_rows_queue)
+    return _time_instance
+
+
+def get_cur_instance():
+    """延迟创建, 避免 import 时创建目录等副作用.
+    """
+
+    global _cur_instance
+    if _cur_instance is None:
+        _cur_instance = RequireStore(report_file=curl_report,
+                                     maxsize=save_rows_queue,
+                                     cookie='~/report/cookie.txt')
+    return _cur_instance
+
+
+class Timer:
     """Computer program exec time."""
 
     def __init__(self, verbose=False):
@@ -70,14 +90,17 @@ def request_process(request, frame='django'):
 
     if len(req_dict) > 0:
         log.debug(req_dict)
+        pairs = []
         for (key, value) in req_dict.items():
-            str_post = '&'.join((str_post, '%s=%s' % (key, value)))
-        str_post = str_post.strip('&')
+            pairs.append('%s=%s' % (quote_plus(str(key)),
+                                    quote_plus(str(value))))
+        str_post = '&'.join(pairs)
         log.debug('Data String: %s' % str_post)
         log.debug('-*' * 50)
 
     if req_method == "POST" and post_data_saved and str_post:
         # 记录传入值
+        cur_instance = get_cur_instance()
         line = cur_instance.hold_data_require(
             request, request_url=request_url, data=str_post, frame=frame)
         cur_instance.save_line_data(line)
@@ -91,6 +114,9 @@ def frame_request(frame, func=None):
         :param frame: 框架 名称
         :param func: view 函数
     """
+
+    if func is None:
+        return lambda f: frame_request(frame, f)
 
     @wraps(func)
     def returned_wrapper(request, *args, **kwargs):
@@ -106,17 +132,18 @@ def frame_request(frame, func=None):
                 log.debug("%s => %s ms" % (full_path, t.millisecond))
                 line = "%-25s %s => %s ms\n" % (
                     full_path, 8 * ' ', t.millisecond)
-                time_instance.save_line_data(line)
+                get_time_instance().save_line_data(line)
             else:
                 response = func(request, *args, **kwargs)
             return response
 
         except Exception as e:
             # 异常时保存下数据
-            cur_instance.save_file_data()
+            get_cur_instance().save_file_data()
 
             log.exception(e)
             traceback.print_exc(file=sys.stdout)
+            raise
 
     return returned_wrapper
 
@@ -134,6 +161,9 @@ def tornado_request(func=None):
     """测试request函数, 打印出异常信息.
     """
 
+    if func is None:
+        return tornado_request
+
     @wraps(func)
     def returned_wrapper(self, *args, **kwargs):
         try:
@@ -148,17 +178,18 @@ def tornado_request(func=None):
                 log.debug("%s => %s ms" % (full_path, t.millisecond))
                 line = "%-25s %s => %s ms\n" % (
                     full_path, 8 * ' ', t.millisecond)
-                time_instance.save_line_data(line)
+                get_time_instance().save_line_data(line)
             else:
                 response = func(self, *args, **kwargs)
             return response
 
         except Exception as e:
             # 异常时保存下数据
-            cur_instance.save_file_data()
+            get_cur_instance().save_file_data()
 
             log.exception(e)
             traceback.print_exc(file=sys.stdout)
+            raise
 
     return returned_wrapper
 

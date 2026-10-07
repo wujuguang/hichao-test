@@ -1,27 +1,25 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
+#!/usr/bin/env python
 
 """拦截request, 构建curl脚本, 并存储类.
     没使用middleware的形式, 拦截所需service, 使定义更灵活.
 """
 
+import argparse
+import atexit
 import os
 import datetime
-import six
-from optparse import OptionParser
+import queue
 from hichao_test.conf import log, login_api, logout_api, save_rows_queue
 
-Queue = six.moves.queue.Queue
+Queue = queue.Queue
 
 
-class DataStore(object):
+class DataStore:
     """数据行存储类.
     """
 
     def __init__(self, report_file, maxsize=5):
-        super(DataStore, self).__init__()
+        super().__init__()
         self._report_file = report_file
         self._lines_store = Queue(maxsize=maxsize)
 
@@ -29,6 +27,9 @@ class DataStore(object):
         dir_path = os.path.dirname(self._report_file)
         if dir_path and not os.path.exists(dir_path):
             os.makedirs(dir_path)
+
+        # 进程退出时冲刷队列, 避免数据丢失
+        atexit.register(self.save_file_data)
 
     def get_report_file(self):
         return self._report_file
@@ -38,8 +39,8 @@ class DataStore(object):
         """
 
         if os.path.exists(self._report_file):
-            read_file = open(self._report_file, 'rb')
-            return read_file.readlines()
+            with open(self._report_file, 'r', encoding='utf-8') as read_file:
+                return read_file.readlines()
 
         return None
 
@@ -61,14 +62,14 @@ class DataStore(object):
         """存储数据到文件.
         """
 
-        with open(self._report_file, 'ab') as f:
+        with open(self._report_file, 'a', encoding='utf-8') as f:
             if not self._lines_store.empty():
                 log_time = "#### %s\n" % str(datetime.datetime.now())
-                f.write(str(log_time))
+                f.write(log_time)
 
             while not self._lines_store.empty():
                 one = self._lines_store.get()
-                f.write(str("\t%s\n" % one))
+                f.write("\t%s\n" % one)
 
 
 class RequireStore(DataStore):
@@ -79,7 +80,7 @@ class RequireStore(DataStore):
     _LOGOUT_API = logout_api
 
     def __init__(self, report_file, maxsize=0, cookie=None):
-        super(RequireStore, self).__init__(report_file, maxsize)
+        super().__init__(report_file, maxsize)
         self.cookie = cookie
 
     def hold_data_require(self, request, request_url=None, data=None,
@@ -156,9 +157,9 @@ def sole_file_data(instance):
         sole_data = set(lines)
         num_date = 0
 
-        with open(sole_file, 'ab') as rf:
+        with open(sole_file, 'a', encoding='utf-8') as rf:
             log_time = "#### %s\n" % str(datetime.datetime.now())
-            rf.write(str(log_time))
+            rf.write(log_time)
 
             for _line_ in sole_data:
                 if _line_.startswith('####'):  # 取消原来日期分组
@@ -176,16 +177,14 @@ def main():
     """提供外部 entry points 而用.
     """
 
-    parser = OptionParser()
-    parser.add_option("-f", "--file", type="string",
-                      dest="file",
-                      default=None,
-                      help="remove repeat lines in the script file.")
+    parser = argparse.ArgumentParser(
+        description='remove repeat lines in the script file.')
+    parser.add_argument('-f', '--file', dest='file', default=None,
+                        help='remove repeat lines in the script file.')
 
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()
     if not options.file:
-        parser.error("incorrect number of arguments")
-        return
+        parser.error('incorrect number of arguments')
 
     _instance = RequireStore(report_file=options.file, maxsize=save_rows_queue,
                              cookie='~/report/cookie.txt')

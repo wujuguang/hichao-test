@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 import os
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.rst')).read()
-NEWS = open(os.path.join(here, 'CHANGELOG.rst')).read()
-
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-zip_safe = not on_rtd
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    README = f.read()
+with open(os.path.join(here, 'CHANGELOG.rst'), encoding='utf-8') as f:
+    NEWS = f.read()
 
 version = '0.2.2'
 
@@ -26,8 +24,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     platforms=["any"],
-    install_requires=['six'],
-    # zip_safe=zip_safe,
+    install_requires=[],
+    python_requires='>=3.11',
     zip_safe=False,
     entry_points={
         'console_scripts': [
@@ -42,9 +40,9 @@ setup(
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Utilities',
         'Topic :: Software Development :: Libraries :: Python Modules',

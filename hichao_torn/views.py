@@ -1,5 +1,4 @@
-#!usr/bin/env python
-# coding: utf-8
+#!/usr/bin/env python
 
 import tornado.web
 from hichao_test import tornado_request

@@ -1,22 +1,26 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 """读取存放测试脚本的文件, 以命令行的形式执行指定的行脚本, 指定范围的行脚本.
 
     利用 linux curl 构建测试脚本, 减少服务端开发过程中, 在测试上对客户端的依赖.
 """
 
-from __future__ import unicode_literals, print_function
+import argparse
+import re
+import shlex
+import subprocess
 
-import six
 import os.path
-from optparse import OptionParser
-from hichao_test.conf import log
-
-range_ = six.moves.range
+from hichao_test.conf import log, lazy_bone_list
 
 
-class ScriptExecute(object):
+def _mask_sensitive(line):
+    """脱敏 curl 命令中的 -d/-G 数据, 避免日志泄露密码等."""
+
+    return re.sub(r'(-[dG]\s+")[^"]*(")', r'\1***\2', line)
+
+
+class ScriptExecute:
     """读取测试脚本, 执行行脚本, 指定范围的行脚本
     """
 
@@ -27,7 +31,7 @@ class ScriptExecute(object):
             :param lazy_bone:   替换URL正则表达式中(GET)参数值.
         """
 
-        super(ScriptExecute, self).__init__()
+        super().__init__()
         self.script_file = script_file
         self.script_lines = self.__read_script_file()
 
@@ -48,7 +52,7 @@ class ScriptExecute(object):
 
         if not self.log_file_name:
             # noinspection PyUnresolvedReferences
-            log_file_name = os.path.join(result_logs, u'curl_%s.htm')
+            log_file_name = os.path.join(result_logs, 'curl_%s.htm')
 
             self.log_file_name = log_file_name
 
@@ -61,18 +65,17 @@ class ScriptExecute(object):
         if os.path.exists(self.script_file):
             if os.path.ismount(self.script_file) or os.path.isdir(
                     self.script_file):
-                log.error("oh, specify the path error.")  # '亲, 指定的存储路径错误！'
-                return
+                raise ValueError(
+                    "specified path is a directory or mount point: %s"
+                    % self.script_file)
 
-            script_log_file = open(self.script_file, 'rb')
-            lines = script_log_file.readlines()
+            with open(self.script_file, 'r', encoding='utf-8') as script_log_file:
+                lines = script_log_file.readlines()
         else:
-            # '测试脚本, 指定的文件不存在.'
-            log.error("specified script file does not exist.")
-            return
+            raise FileNotFoundError(
+                "specified script file does not exist: %s" % self.script_file)
 
         if not lines:
-            # '测试脚本, 指定的文件内容为空.'
             log.error("specified script file content is empty.")
 
         return lines
@@ -83,26 +86,36 @@ class ScriptExecute(object):
             :param num: 行编号, 正整数.
         """
 
-        log_name = self.__path_result_file() % num
-        if num > 0:
-            num -= 1  # 文档行标, 实例索引起点不一
-        else:
-            raise Exception("num参数必须是正整数.")
+        if num < 1:
+            raise ValueError("num参数必须是正整数.")
+        if num > len(self.script_lines):
+            raise IndexError("num参数超出脚本总行数 %d." % len(
+                self.script_lines))
+        num -= 1  # 文档行标, 实例索引起点不一
 
-        line = self.script_lines[num].strip().replace("\n", "")
+        line = self.script_lines[num].strip()
         # log.debug(line.startswith('curl'))
 
         if line.startswith('curl'):
             if self.lazy_bone:
                 line = self.lazy_bone.process_regular(line)
 
-            log.debug(line)
-            log.debug(line.split()[-1])
+            log.debug(_mask_sensitive(line))
+            parts = line.split()
+            if parts:
+                log.debug(parts[-1])
 
-            if self.report_bool:
-                os.system('%s > %s' % (line, log_name))
-            else:
-                os.system('%s' % line)
+            try:
+                if self.report_bool:
+                    log_name = self.__path_result_file() % (num + 1)
+                    with open(log_name, 'w', encoding='utf-8') as out:
+                        subprocess.run(shlex.split(line), stdout=out,
+                                       timeout=60, check=False)
+                else:
+                    subprocess.run(shlex.split(line), timeout=60, check=False)
+            except (ValueError, subprocess.TimeoutExpired) as e:
+                # 单行失败(引号不配对/超时等)不影响后续行执行
+                log.error("line %d execute failed: %s", num + 1, e)
 
             log.debug('-*' * 50)
 
@@ -113,39 +126,56 @@ class ScriptExecute(object):
             :param count: 后面行数, 正负整数.
         """
 
+        if start < 1:
+            raise ValueError("start参数必须是正整数.")
+
         if self.script_lines:
-            if len(self.script_lines) >= abs(start):
-                if count == 0:
-                    self.__loop_line(start)
-                else:
-                    step = 1 if count > 0 else -1
-                    data_range = range_(start, start + count, step)
-                    for i in data_range:
-                        self.__loop_line(i)
+            total = len(self.script_lines)
+            if total < start:
+                raise ValueError("start参数超出脚本总行数 %d." % total)
+
+            if count == 0:
+                self.__loop_line(start)
+            else:
+                step = 1 if count > 0 else -1
+                # 末端行号预校验, 避免半途崩溃导致部分执行
+                end = start + count - step
+                if end < 1 or end > total:
+                    raise ValueError(
+                        "count参数导致行号 %d 超出有效范围 [1, %d]."
+                        % (end, total))
+
+                data_range = range(start, start + count, step)
+                for i in data_range:
+                    self.__loop_line(i)
 
     def run_script_total(self):
         """运行所有记录.
         """
 
         if self.script_lines:
-            data_range = range_(1, len(self.script_lines) + 1)
+            data_range = range(1, len(self.script_lines) + 1)
             for i in data_range:
                 self.__loop_line(i)
 
 
-class LazyBone(object):
-    """处理某些正则表达式, 懒人而已.
+class LazyBone:
+    r"""替换脚本行中的占位文本, 懒人而已.
+
+        注意: 做的是字面替换而非正则匹配. 典型场景是脚本中保存了
+        Django URLconf 形式的占位符(如 /user/(?P<user_id>\d+)/),
+        执行前将其字面替换为实际的 id.
     """
 
     def __init__(self, _lazy_bone_list=None):
         """
-            :param _lazy_bone_list: (要替换的表达式, 被替换为的值).
+            :param _lazy_bone_list: (要替换的字面文本, 被替换为的值).
         """
 
-        self._lazy_bone_list = _lazy_bone_list
+        self._lazy_bone_list = _lazy_bone_list or []
 
     def process_regular(self, line):
-        """处理某些正则表达式.
+        """字面替换行内容中的占位文本, 命中第一条规则即返回.
 
             :param line: 行内容
         """
@@ -164,33 +194,25 @@ def main():
     """提供外部 entry points 而用.
     """
 
-    parser = OptionParser()
-    parser.add_option("-f", "--file",
-                      type="string",
-                      dest="file",
-                      help="store the curl script data file.")
+    parser = argparse.ArgumentParser(
+        description='execute curl script lines from the stored file.')
+    parser.add_argument('-f', '--file', dest='file', default=None,
+                        help='store the curl script data file.')
+    parser.add_argument('-n', '--num', type=int, dest='num', default=None,
+                        help='execute the script line number specified.')
+    parser.add_argument('-c', '--count', type=int, dest='count', default=0,
+                        help='perform the following line count.')
 
-    parser.add_option("-n", "--num",
-                      type="int",
-                      dest="num",
-                      default=None,
-                      help="execute the script line number specified.")
-
-    parser.add_option("-c", "--count",
-                      type="int",
-                      dest="count",
-                      default=0,
-                      help="perform the following line count.")
-
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()
     log.debug("options:%s\n" % options)
 
     if not options.file:
-        log.error("specified file required parameters are missing.")
-        return
+        parser.error("specified file required parameters are missing.")
 
     file_name = options.file
-    _curl_script = ScriptExecute(file_name, report_bool=True, lazy_bone=None)
+    lazy_bone = LazyBone(lazy_bone_list) if lazy_bone_list else None
+    _curl_script = ScriptExecute(file_name, report_bool=True,
+                                 lazy_bone=lazy_bone)
 
     if options.num is None:
         _curl_script.run_script_total()
